@@ -1,5 +1,10 @@
 <?php
-header("Content-Type: application/json"); // Set the response to JSON
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+header("Content-Type: application/json");
 
 // Debugging: Log received POST data
 error_log(print_r($_POST, true));
@@ -31,11 +36,31 @@ $data = [
 // Save the data to a JSON file
 $filePath = "data/registrations.json";
 if (!file_exists("data")) {
-    mkdir("data", 0777, true); // Create the directory if it doesn't exist
+    if (!mkdir("data", 0777, true)) {
+        echo json_encode(["success" => false, "message" => "Failed to create directory."]);
+        exit;
+    }
 }
-$registrations = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) : [];
+
+$registrations = [];
+if (file_exists($filePath)) {
+    $fileContents = file_get_contents($filePath);
+    if ($fileContents === false) {
+        echo json_encode(["success" => false, "message" => "Failed to read existing data."]);
+        exit;
+    }
+    $registrations = json_decode($fileContents, true);
+    if ($registrations === null && json_last_error() !== JSON_ERROR_NONE) {
+        echo json_encode(["success" => false, "message" => "Failed to decode existing data."]);
+        exit;
+    }
+}
+
 $registrations[] = $data;
-file_put_contents($filePath, json_encode($registrations, JSON_PRETTY_PRINT));
+if (file_put_contents($filePath, json_encode($registrations, JSON_PRETTY_PRINT)) === false) {
+    echo json_encode(["success" => false, "message" => "Failed to save data."]);
+    exit;
+}
 
 // Respond with success
 echo json_encode(["success" => true, "data" => $data]);
