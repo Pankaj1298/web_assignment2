@@ -1,6 +1,9 @@
 <?php
 header("Content-Type: application/json"); // Set the response to JSON
 
+// Debugging: Log received POST data
+error_log(print_r($_POST, true));
+
 // Retrieve form data
 $fullName = $_POST['fullName'] ?? null;
 $email = $_POST['email'] ?? null;
